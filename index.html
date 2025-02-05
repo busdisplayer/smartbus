@@ -134,6 +134,28 @@
         return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     }
 
+    // Fonction pour obtenir les arrêts et la durée de la ligne
+    function getLineStops(ligne) {
+        const busStops = {
+            "L30": [
+                { stop: "Lycée", duration: 0 },
+                { stop: "Gare Centrale", duration: 15 },
+                { stop: "Place des Arts", duration: 30 },
+                { stop: "Hôpital", duration: 45 },
+                { stop: "Terminal", duration: 60 }
+            ],
+            "L31": [
+                { stop: "Gendarmerie", duration: 0 },
+                { stop: "Université", duration: 10 },
+                { stop: "Marché", duration: 20 },
+                { stop: "Place Centrale", duration: 30 }
+            ],
+            // Ajoutez les arrêts pour les autres lignes ici...
+        };
+        return busStops[ligne] || [];
+    }
+
+    // Fonction pour obtenir les passages suivants
     function getNextPassages() {
         const horairesDiv = document.getElementById("horaires");
         const now = new Date();
@@ -157,11 +179,27 @@
             if (nextPassage) {
                 const timeRemaining = nextPassage - currentMinutesOfDay;
                 const nextTimeFormatted = formatTime(nextPassage); // Convertir les minutes en format HH:mm
-                tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td><td>${nextTimeFormatted}</td></tr>`;
+                // Récupérer les arrêts et la durée de la ligne
+                const stops = getLineStops(ligne);
+                tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td><td>${nextTimeFormatted}</td><td><button onclick="showLineStops('${ligne}')">Voir les arrêts</button></td></tr>`;
             }
         }
 
-        horairesDiv.innerHTML = tableContent || "<tr><td colspan='3'>Plus de bus pour aujourd'hui</td></tr>";
+        horairesDiv.innerHTML = tableContent || "<tr><td colspan='6'>Plus de bus pour aujourd'hui</td></tr>";
+    }
+
+    // Fonction pour afficher les arrêts d'une ligne
+    function showLineStops(ligne) {
+        const stops = getLineStops(ligne);
+        let stopsContent = `<h3>Arrêts de la ligne ${ligne}</h3><ul>`;
+        stops.forEach(stop => {
+            const stopTime = formatTime(stop.duration);
+            stopsContent += `<li>${stop.stop} - ${stopTime}</li>`;
+        });
+        stopsContent += "</ul>";
+
+        const stopsDiv = document.getElementById("stops");
+        stopsDiv.innerHTML = stopsContent;
     }
 
     updateLedScreen();
@@ -169,6 +207,7 @@
     setInterval(updateLedScreen, 1000);
     setInterval(getNextPassages, 60000);
 </script>
+
 
 </body>
 </html>
