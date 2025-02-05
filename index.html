@@ -3,100 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horaires des Transports</title>
-    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <title>Horaires des Bus</title>
     <style>
-        .details-container { display: none; }
-        .bus-list { cursor: pointer; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        table {
+            width: 60%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #007bff;
+            padding: 10px;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
     </style>
 </head>
 <body>
-    <div class="w3-container">
-        <h2 class="w3-center">Prochains Départs</h2>
-        <table class="w3-table w3-striped w3-bordered">
-            <thead>
-                <tr class="w3-blue">
-                    <th>Ligne</th>
-                    <th>Destination</th>
-                    <th>Départ dans</th>
-                </tr>
-            </thead>
-            <tbody id="schedule"></tbody>
-        </table>
-    </div>
-
-    <div id="details" class="w3-container w3-pale-blue w3-padding details-container">
-        <h3 id="details-title"></h3>
-        <p><strong>Heure d'arrivée :</strong> <span id="arrival-time"></span></p>
-        <h4>Liste des arrêts :</h4>
-        <ul id="stops-list" class="w3-ul w3-card-4"></ul>
-    </div>
-
+    <h1>Prochains passages des Bus</h1>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Ligne</th>
+                <th>Prochains passages</th>
+            </tr>
+        </thead>
+        <tbody id="horaires">
+            <tr><td colspan="2">Chargement des horaires...</td></tr>
+        </tbody>
+    </table>
+    
     <script>
-        const schedules = [
-            { line: "L11", destination: "Saint-Étienne", times: ["14:30", "15:00", "15:30"], arrival: "16:00", stops: ["Arrêt A", "Arrêt B", "Arrêt C"] },
-            { line: "T1", destination: "Lyon", times: ["14:40", "15:10", "15:40"], arrival: "16:10", stops: ["Arrêt D", "Arrêt E", "Arrêt F"] },
-            { line: "L3", destination: "Grenoble", times: ["14:45", "15:15", "15:45"], arrival: "16:30", stops: ["Arrêt G", "Arrêt H", "Arrêt I"] }
-        ];
-
-        function calculateTimeDifference(time) {
+        function getNextPassages() {
+            const horairesDiv = document.getElementById("horaires");
             const now = new Date();
-            const [hours, minutes] = time.split(':').map(Number);
-            const departure = new Date();
-            departure.setHours(hours, minutes, 0);
-            const diff = Math.round((departure - now) / 60000);
-            return diff >= 0 ? diff : Infinity;
-        }
+            const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
+            const isWeekend = now.getDay() === 0 || now.getDay() === 6; // Vérifie si c'est le week-end
 
-        function updateSchedule() {
-            const tableBody = document.getElementById("schedule");
-            tableBody.innerHTML = "";
-            let upcomingTrips = [];
-
-            schedules.forEach(schedule => {
-                schedule.times.forEach(time => {
-                    upcomingTrips.push({
-                        line: schedule.line,
-                        destination: schedule.destination,
-                        departure: time,
-                        arrival: schedule.arrival,
-                        stops: schedule.stops,
-                        timeRemaining: calculateTimeDifference(time)
-                    });
-                });
-            });
-
-            upcomingTrips = upcomingTrips.filter(trip => trip.timeRemaining !== Infinity).sort((a, b) => a.timeRemaining - b.timeRemaining);
-
-            upcomingTrips.forEach(trip => {
-                const row = document.createElement("tr");
-                row.classList.add("bus-list");
-                row.innerHTML = `
-                    <td>${trip.line}</td>
-                    <td>${trip.destination}</td>
-                    <td>${trip.timeRemaining} min (${trip.departure})</td>
-                `;
-                row.onclick = () => showDetails(trip);
-                tableBody.appendChild(row);
-            });
-        }
-
-        function showDetails(schedule) {
-            document.getElementById("details").style.display = "block";
-            document.getElementById("details-title").textContent = `Détails de la ligne ${schedule.line}`;
-            document.getElementById("arrival-time").textContent = schedule.arrival;
+            const horairesBus = {
+                "Ligne 1": isWeekend ? ["09:30", "11:00", "13:30", "15:45", "18:00"] : ["08:00", "09:15", "10:30", "12:00", "14:45", "16:20", "18:00", "19:30", "21:00"],
+                "Ligne 2": isWeekend ? ["10:00", "12:30", "14:00", "16:30", "19:00"] : ["07:45", "09:00", "11:15", "13:00", "15:30", "17:45", "20:15"],
+                "Ligne 3": isWeekend ? ["08:45", "10:15", "12:45", "15:00", "17:30"] : ["06:30", "08:15", "10:00", "12:30", "14:15", "16:45", "19:00", "21:30"]
+            };
             
-            const stopsList = document.getElementById("stops-list");
-            stopsList.innerHTML = "";
-            schedule.stops.forEach(stop => {
-                const li = document.createElement("li");
-                li.textContent = stop;
-                stopsList.appendChild(li);
-            });
+            let tableContent = "";
+            for (const [ligne, horaires] of Object.entries(horairesBus)) {
+                const nextPassages = horaires.filter(time => {
+                    const [hour, minutes] = time.split(":").map(Number);
+                    return hour > currentHour || (hour === currentHour && minutes > currentMinutes);
+                }).slice(0, 2); // Prendre les 2 prochains horaires
+                
+                tableContent += `<tr><td>${ligne}</td><td>${nextPassages.length > 0 ? nextPassages.join(" | ") : "Plus de bus pour aujourd'hui"}</td></tr>`;
+            }
+            
+            horairesDiv.innerHTML = tableContent;
         }
-
-        updateSchedule();
-        setInterval(updateSchedule, 60000);
+        
+        // Mettre à jour les horaires toutes les minutes
+        getNextPassages();
+        setInterval(getNextPassages, 60000);
     </script>
 </body>
 </html>
