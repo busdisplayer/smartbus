@@ -52,6 +52,7 @@
                 <th>Ligne</th>
                 <th>Destination</th>
                 <th>Temps restant</th>
+                <th>Quai</th>
             </tr>
         </thead>
         <tbody id="horaires">
@@ -74,19 +75,19 @@
             const isWeekend = now.getDay() === 0 || now.getDay() === 6;
 
             const horairesBus = {
-                "L30": { destination: "Gare Centrale", horaires: isWeekend ? [570, 660, 810, 945, 1080] : [480, 555, 630, 720, 885, 980, 1080, 1170, 1260] },
-                "L31": { destination: "Université", horaires: isWeekend ? [600, 750, 840, 990, 1140] : [465, 540, 675, 780, 930, 1065, 1215] },
-                "L32": { destination: "Hôpital", horaires: isWeekend ? [525, 615, 765, 900, 1050] : [390, 495, 600, 750, 855, 1005, 1140, 1290] },
-                "L11": { destination: "Stade", horaires: isWeekend ? [555, 705, 855, 1005, 1170] : [420, 525, 630, 735, 840, 990, 1125, 1245] },
-                "L35": { destination: "Aéroport", horaires: isWeekend ? [510, 630, 780, 930, 1095] : [405, 510, 645, 765, 900, 1035, 1185, 1320] }
+                "L30": { destination: "Gare Centrale", quai: "Lycée", horaires: isWeekend ? [570, 660, 810, 945, 1080] : [480, 555, 630, 720, 885, 980, 1080, 1170, 1260] },
+                "L31": { destination: "Université", quai: "Gendarmerie", horaires: isWeekend ? [600, 750, 840, 990, 1140] : [465, 540, 675, 780, 930, 1065, 1215] },
+                "L32": { destination: "Hôpital", quai : "Gendarmerie",horaires: isWeekend ? [525, 615, 765, 900, 1050] : [390, 495, 600, 750, 855, 1005, 1140, 1290] },
+                "L11": { destination: "Stade", quai:"Lycée",horaires: isWeekend ? [555, 705, 855, 1005, 1170] : [420, 525, 630, 735, 840, 990, 1125, 1245] },
+                "L35": { destination: "Aéroport", quai:"Lycée", horaires: isWeekend ? [510, 630, 780, 930, 1095] : [405, 510, 645, 765, 900, 1035, 1185, 1320] }
             };
             
             let tableContent = "";
-            for (const [ligne, data] of Object.entries(horairesBus)) {
+            for (const [ligne, quai, data] of Object.entries(horairesBus)) {
                 const nextPassage = data.horaires.find(minutes => minutes > currentMinutesOfDay);
                 if (nextPassage) {
                     const timeRemaining = nextPassage - currentMinutesOfDay;
-                    tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td></tr>`;
+                    tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${quai}</td></tr>`;
                 }
             }
             
