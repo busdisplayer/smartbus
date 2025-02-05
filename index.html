@@ -34,34 +34,49 @@
 
     <script>
         const schedules = [
-            { line: "L11", destination: "Saint-Étienne", departure: "14:48", arrival: "15:30", stops: ["Arrêt A", "Arrêt B", "Arrêt C"] },
-            { line: "T1", destination: "Lyon", departure: "15:00", arrival: "16:10", stops: ["Arrêt D", "Arrêt E", "Arrêt F"] },
-            { line: "L3", destination: "Grenoble", departure: "14:55", arrival: "16:00", stops: ["Arrêt G", "Arrêt H", "Arrêt I"] }
+            { line: "L11", destination: "Saint-Étienne", times: ["14:30", "15:00", "15:30"], arrival: "16:00", stops: ["Arrêt A", "Arrêt B", "Arrêt C"] },
+            { line: "T1", destination: "Lyon", times: ["14:40", "15:10", "15:40"], arrival: "16:10", stops: ["Arrêt D", "Arrêt E", "Arrêt F"] },
+            { line: "L3", destination: "Grenoble", times: ["14:45", "15:15", "15:45"], arrival: "16:30", stops: ["Arrêt G", "Arrêt H", "Arrêt I"] }
         ];
 
-        function calculateTimeDifference(departureTime) {
+        function calculateTimeDifference(time) {
             const now = new Date();
-            const [hours, minutes] = departureTime.split(':').map(Number);
+            const [hours, minutes] = time.split(':').map(Number);
             const departure = new Date();
             departure.setHours(hours, minutes, 0);
-            return Math.round((departure - now) / 60000);
+            const diff = Math.round((departure - now) / 60000);
+            return diff >= 0 ? diff : Infinity;
         }
 
         function updateSchedule() {
             const tableBody = document.getElementById("schedule");
             tableBody.innerHTML = "";
-            
-            schedules.sort((a, b) => calculateTimeDifference(a.departure) - calculateTimeDifference(b.departure));
-            
+            let upcomingTrips = [];
+
             schedules.forEach(schedule => {
+                schedule.times.forEach(time => {
+                    upcomingTrips.push({
+                        line: schedule.line,
+                        destination: schedule.destination,
+                        departure: time,
+                        arrival: schedule.arrival,
+                        stops: schedule.stops,
+                        timeRemaining: calculateTimeDifference(time)
+                    });
+                });
+            });
+
+            upcomingTrips = upcomingTrips.filter(trip => trip.timeRemaining !== Infinity).sort((a, b) => a.timeRemaining - b.timeRemaining);
+
+            upcomingTrips.forEach(trip => {
                 const row = document.createElement("tr");
                 row.classList.add("bus-list");
                 row.innerHTML = `
-                    <td>${schedule.line}</td>
-                    <td>${schedule.destination}</td>
-                    <td>${calculateTimeDifference(schedule.departure)} min (${schedule.departure})</td>
+                    <td>${trip.line}</td>
+                    <td>${trip.destination}</td>
+                    <td>${trip.timeRemaining} min (${trip.departure})</td>
                 `;
-                row.onclick = () => showDetails(schedule);
+                row.onclick = () => showDetails(trip);
                 tableBody.appendChild(row);
             });
         }
