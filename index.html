@@ -51,7 +51,7 @@
             <tr>
                 <th>Ligne</th>
                 <th>Destination</th>
-                <th>Prochains passages</th>
+                <th>Temps restant</th>
             </tr>
         </thead>
         <tbody id="horaires">
@@ -70,29 +70,27 @@
         function getNextPassages() {
             const horairesDiv = document.getElementById("horaires");
             const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinutes = now.getMinutes();
+            const currentMinutesOfDay = now.getHours() * 60 + now.getMinutes();
             const isWeekend = now.getDay() === 0 || now.getDay() === 6;
 
             const horairesBus = {
-                "L30": { destination: "Gare Centrale", horaires: isWeekend ? ["09:30", "11:00", "13:30", "15:45", "18:00"] : ["08:00", "09:15", "10:30", "12:00", "14:45", "16:20", "18:00", "19:30", "21:00"] },
-                "L31": { destination: "Université", horaires: isWeekend ? ["10:00", "12:30", "14:00", "16:30", "19:00"] : ["07:45", "09:00", "11:15", "13:00", "15:30", "17:45", "20:15"] },
-                "L32": { destination: "Hôpital", horaires: isWeekend ? ["08:45", "10:15", "12:45", "15:00", "17:30"] : ["06:30", "08:15", "10:00", "12:30", "14:15", "16:45", "19:00", "21:30"] },
-                "L11": { destination: "Stade", horaires: isWeekend ? ["09:15", "11:45", "14:15", "16:45", "19:30"] : ["07:00", "08:45", "10:30", "12:15", "14:00", "16:30", "18:45", "20:45"] },
-                "L35": { destination: "Aéroport", horaires: isWeekend ? ["08:30", "10:30", "13:00", "15:30", "18:15"] : ["06:45", "08:30", "10:45", "12:45", "15:00", "17:15", "19:45", "22:00"] }
+                "L30": { destination: "Gare Centrale", horaires: isWeekend ? [570, 660, 810, 945, 1080] : [480, 555, 630, 720, 885, 980, 1080, 1170, 1260] },
+                "L31": { destination: "Université", horaires: isWeekend ? [600, 750, 840, 990, 1140] : [465, 540, 675, 780, 930, 1065, 1215] },
+                "L32": { destination: "Hôpital", horaires: isWeekend ? [525, 615, 765, 900, 1050] : [390, 495, 600, 750, 855, 1005, 1140, 1290] },
+                "L11": { destination: "Stade", horaires: isWeekend ? [555, 705, 855, 1005, 1170] : [420, 525, 630, 735, 840, 990, 1125, 1245] },
+                "L35": { destination: "Aéroport", horaires: isWeekend ? [510, 630, 780, 930, 1095] : [405, 510, 645, 765, 900, 1035, 1185, 1320] }
             };
             
             let tableContent = "";
             for (const [ligne, data] of Object.entries(horairesBus)) {
-                const nextPassages = data.horaires.filter(time => {
-                    const [hour, minutes] = time.split(":").map(Number);
-                    return hour > currentHour || (hour === currentHour && minutes > currentMinutes);
-                }).slice(0, 2);
-                
-                tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${nextPassages.length > 0 ? nextPassages.join(" | ") : "Plus de bus pour aujourd'hui"}</td></tr>`;
+                const nextPassage = data.horaires.find(minutes => minutes > currentMinutesOfDay);
+                if (nextPassage) {
+                    const timeRemaining = nextPassage - currentMinutesOfDay;
+                    tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td></tr>`;
+                }
             }
             
-            horairesDiv.innerHTML = tableContent;
+            horairesDiv.innerHTML = tableContent || "<tr><td colspan='3'>Plus de bus pour aujourd'hui</td></tr>";
         }
         
         updateLedScreen();
@@ -102,4 +100,3 @@
     </script>
 </body>
 </html>
-
