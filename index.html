@@ -60,12 +60,25 @@
         </tbody>
     </table>
     
-    <script>
+  <script>
     function updateLedScreen() {
         const now = new Date();
         const dateStr = now.toLocaleDateString('fr-FR');
         const timeStr = now.toLocaleTimeString('fr-FR');
         document.getElementById("led-screen").innerHTML = `Beauregard | ${dateStr} - ${timeStr}`;
+    }
+
+    // Fonction pour convertir l'heure HH:mm en minutes depuis minuit
+    function convertToMinutes(time) {
+        const [hours, minutes] = time.split(":").map(Number);
+        return hours * 60 + minutes;
+    }
+
+    // Fonction pour formater les minutes en HH:mm
+    function formatTime(minutes) {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     }
 
     function getNextPassages() {
@@ -75,29 +88,34 @@
         const isWeekend = now.getDay() === 0 || now.getDay() === 6;
 
         const horairesBus = {
-            "L30": { destination: "Gare Centrale", quai: "Lycée", horaires: isWeekend ? [570, 660, 810, 945, 1080] : [480, 555, 630, 720, 885, 980, 1080, 1170, 1260] },
-            "L31": { destination: "Université", quai: "Gendarmerie", horaires: isWeekend ? [600, 750, 840, 990, 1140] : [465, 540, 675, 780, 930, 1065, 1215] },
-            "L32": { destination: "Hôpital", quai : "Gendarmerie", horaires: isWeekend ? [525, 615, 765, 900, 1050] : [390, 495, 600, 750, 855, 1005, 1140, 1290] },
-            "L11": { destination: "Stade", quai:"Lycée", horaires: isWeekend ? [555, 705, 855, 1005, 1170] : [420, 525, 630, 735, 840, 990, 1125, 1245] },
-            "L35": { destination: "Aéroport", quai:"Lycée", horaires: isWeekend ? [510, 630, 780, 930, 1095] : [405, 510, 645, 765, 900, 1035, 1185, 1320] }
+            "L30": { destination: "Gare Centrale", quai: "Lycée", horaires: isWeekend ? ["09:30", "11:00", "13:30", "15:45", "18:00"] : ["08:00", "09:15", "10:30", "12:00", "14:45", "16:20", "18:00", "19:30", "21:00"] },
+            "L31": { destination: "Université", quai: "Gendarmerie", horaires: isWeekend ? ["10:00", "12:30", "14:00", "16:30", "18:00"] : ["07:45", "09:00", "11:15", "12:30", "14:30", "16:05", "18:00"] },
+            "L32": { destination: "Hôpital", quai: "Gendarmerie", horaires: isWeekend ? ["08:45", "10:15", "12:45", "14:30", "17:30"] : ["06:30", "07:45", "09:00", "10:30", "12:00", "13:45", "15:10", "16:30"] },
+            "L11": { destination: "Stade", quai: "Lycée", horaires: isWeekend ? ["09:15", "11:45", "13:45", "15:45", "17:30"] : ["07:00", "08:30", "10:15", "12:00", "13:30", "15:00", "16:30", "18:00"] },
+            "L35": { destination: "Aéroport", quai: "Lycée", horaires: isWeekend ? ["08:30", "10:30", "13:00", "14:30", "17:15"] : ["07:15", "08:15", "09:45", "11:15", "13:00", "14:45", "16:30", "18:45"] }
         };
-        
+
         let tableContent = "";
         for (const [ligne, data] of Object.entries(horairesBus)) {
-            const nextPassage = data.horaires.find(minutes => minutes > currentMinutesOfDay);
+            // Convertir les horaires en minutes depuis minuit
+            const horairesEnMinutes = data.horaires.map(horaire => convertToMinutes(horaire));
+            // Trouver le prochain passage
+            const nextPassage = horairesEnMinutes.find(minutes => minutes > currentMinutesOfDay);
             if (nextPassage) {
                 const timeRemaining = nextPassage - currentMinutesOfDay;
-                tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td></tr>`;
+                const nextTimeFormatted = formatTime(nextPassage); // Convertir les minutes en format HH:mm
+                tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td><td>${nextTimeFormatted}</td></tr>`;
             }
         }
-        
+
         horairesDiv.innerHTML = tableContent || "<tr><td colspan='3'>Plus de bus pour aujourd'hui</td></tr>";
     }
-        
-        updateLedScreen();
-        getNextPassages();
-        setInterval(updateLedScreen, 1000);
-        setInterval(getNextPassages, 60000);
-    </script>
+
+    updateLedScreen();
+    getNextPassages();
+    setInterval(updateLedScreen, 1000);
+    setInterval(getNextPassages, 60000);
+</script>
+
 </body>
 </html>
