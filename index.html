@@ -157,38 +157,105 @@
     }
 
     // Fonction pour obtenir les passages suivants
-    function getNextPassages() {
-        const horairesDiv = document.getElementById("horaires");
-        const now = new Date();
-        const currentMinutesOfDay = now.getHours() * 60 + now.getMinutes();
-        const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+ function getNextPassages() {
+    const horairesDiv = document.getElementById("horaires");
+    const now = new Date();
+    const currentMinutesOfDay = now.getHours() * 60 + now.getMinutes();
 
-        const horairesBus = {
-            "L30": { destination: "Gare Centrale", quai: "Lycée", terminus: true, horaires: isWeekend ? ["09:30", "11:00", "13:30", "15:45", "18:00"] : ["08:00", "09:15", "10:30", "12:00", "14:45", "16:20", "18:00", "19:30", "21:00"] },
-            "L31": { destination: "Université", quai: "Gendarmerie", terminus: false, horaires: isWeekend ? ["10:00", "12:30", "14:00", "16:30", "18:00"] : ["07:45", "09:00", "11:15", "12:30", "14:30", "16:05", "18:00"] },
-            "L32": { destination: "Hôpital", quai: "Gendarmerie", terminus: false, horaires: isWeekend ? ["08:45", "10:15", "12:45", "14:30", "17:30"] : ["06:30", "07:45", "09:00", "10:30", "12:00", "13:45", "15:10", "16:30"] },
-            "L11": { destination: "Stade", quai: "Lycée", terminus: true, horaires: isWeekend ? ["09:15", "11:45", "13:45", "15:45", "17:30"] : ["07:00", "08:30", "10:15", "12:00", "13:30", "15:00", "16:30", "18:00"] },
-            "L35": { destination: "Aéroport", quai: "Lycée", terminus: true, horaires: isWeekend ? ["08:30", "10:30", "13:00", "14:30", "17:15"] : ["07:15", "08:15", "09:45", "11:15", "13:00", "14:45", "16:30", "18:45"] }
-        };
+    // Fonction pour obtenir la période actuelle
+    function getPeriod() {
+        const dayOfWeek = now.getDay();
+        const date = now.getDate();
+        const month = now.getMonth();
+        const year = now.getFullYear();
 
-        let tableContent = "";
-        for (const [ligne, data] of Object.entries(horairesBus)) {
-            // Convertir les horaires en minutes depuis minuit
-            const horairesEnMinutes = data.horaires.map(horaire => convertToMinutes(horaire));
-            // Trouver le prochain passage
-            const nextPassage = horairesEnMinutes.find(minutes => minutes > currentMinutesOfDay);
-            if (nextPassage) {
-                const timeRemaining = nextPassage - currentMinutesOfDay;
-                const nextTimeFormatted = formatTime(nextPassage); // Convertir les minutes en format HH:mm
-                // Récupérer les arrêts et la durée de la ligne
-                const stops = getLineStops(ligne);
-                let rowStyle = data.terminus ? 'style="background-color: red;"' : ''; // Ligne rouge si terminus
-                tableContent += `<tr ${rowStyle}><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td><td>${nextTimeFormatted}</td><td><button onclick="showLineStops('${ligne}')">Voir les arrêts</button></td></tr>`;
-            }
+        // Déterminer si c'est un jour férié (à adapter selon votre calendrier)
+        const holidays = [
+            new Date(year, 0, 1),  // 1er janvier
+            new Date(year, 4, 1),  // Fête du travail (1er mai)
+            new Date(year, 11, 25), // Noël (25 décembre)
+            // Ajouter d'autres jours fériés ici...
+        ];
+
+        // Vérifier si la date actuelle est un jour férié
+        const isHoliday = holidays.some(holiday => holiday.getDate() === date && holiday.getMonth() === month);
+
+        // Déterminer si c'est pendant les vacances scolaires (exemple simplifié)
+        const isHolidayPeriod = (month === 7 || month === 11); // Exemple: vacances d'été en juillet/août et Noël en décembre
+
+        if (isHoliday) {
+            return "holiday";  // Jour férié
+        } else if (isHolidayPeriod) {
+            return "vacation";  // Vacances scolaires / été
+        } else if (dayOfWeek === 6) {
+            return "saturday";  // Samedi
+        } else if (dayOfWeek === 0) {
+            return "sunday";  // Dimanche
+        } else {
+            return "weekday";  // Semaine
         }
-
-        horairesDiv.innerHTML = tableContent || "<tr><td colspan='6'>Plus de bus pour aujourd'hui</td></tr>";
     }
+
+    // Récupérer la période actuelle
+    const period = getPeriod();
+
+    const horairesBus = {
+        "L30": { destination: "Gare Centrale", quai: "Lycée", terminus: true, horaires: {
+            "weekday": ["08:00", "09:15", "10:30", "12:00", "14:45", "16:20", "18:00", "19:30", "21:00"],
+            "saturday": ["09:30", "11:00", "13:30", "15:45", "18:00"],
+            "sunday": ["09:30", "11:00", "13:30", "15:45", "18:00"],
+            "holiday": ["09:30", "11:00", "13:30", "15:45", "18:00"],
+            "vacation": ["09:00", "11:00", "13:00", "15:00", "17:00"]
+        }},
+        "L31": { destination: "Université", quai: "Gendarmerie", terminus: false, horaires: {
+            "weekday": ["07:45", "09:00", "11:15", "12:30", "14:30", "16:05", "18:00"],
+            "saturday": ["10:00", "12:30", "14:00", "16:30", "18:00"],
+            "sunday": ["10:00", "12:30", "14:00", "16:30", "18:00"],
+            "holiday": ["10:00", "12:30", "14:00", "16:30", "18:00"],
+            "vacation": ["10:00", "12:30", "14:00", "16:30"]
+        }},
+        "L32": { destination: "Hôpital", quai: "Gendarmerie", terminus: false, horaires: {
+            "weekday": ["06:30", "07:45", "09:00", "10:30", "12:00", "13:45", "15:10", "16:30"],
+            "saturday": ["08:45", "10:15", "12:45", "14:30", "17:30"],
+            "sunday": ["08:45", "10:15", "12:45", "14:30", "17:30"],
+            "holiday": ["08:45", "10:15", "12:45", "14:30", "17:30"],
+            "vacation": ["08:00", "10:00", "12:00", "14:00"]
+        }},
+        "L11": { destination: "Stade", quai: "Lycée", terminus: true, horaires: {
+            "weekday": ["07:00", "08:30", "10:15", "12:00", "13:30", "15:00", "16:30", "18:00"],
+            "saturday": ["09:15", "11:45", "13:45", "15:45", "17:30"],
+            "sunday": ["09:15", "11:45", "13:45", "15:45", "17:30"],
+            "holiday": ["09:15", "11:45", "13:45", "15:45", "17:30"],
+            "vacation": ["09:00", "11:00", "13:00", "15:00", "17:00"]
+        }},
+        "L35": { destination: "Aéroport", quai: "Lycée", terminus: true, horaires: {
+            "weekday": ["07:15", "08:15", "09:45", "11:15", "13:00", "14:45", "16:30", "18:45"],
+            "saturday": ["08:30", "10:30", "13:00", "14:30", "17:15"],
+            "sunday": ["08:30", "10:30", "13:00", "14:30", "17:15"],
+            "holiday": ["08:30", "10:30", "13:00", "14:30", "17:15"],
+            "vacation": ["08:00", "10:00", "12:00", "14:00"]
+        }}
+    };
+
+    let tableContent = "";
+    for (const [ligne, data] of Object.entries(horairesBus)) {
+        // Convertir les horaires en minutes depuis minuit
+        const horairesEnMinutes = data.horaires[period].map(horaire => convertToMinutes(horaire));
+        // Trouver le prochain passage
+        const nextPassage = horairesEnMinutes.find(minutes => minutes > currentMinutesOfDay);
+        if (nextPassage) {
+            const timeRemaining = nextPassage - currentMinutesOfDay;
+            const nextTimeFormatted = formatTime(nextPassage); // Convertir les minutes en format HH:mm
+            // Récupérer les arrêts et la durée de la ligne
+            const stops = getLineStops(ligne);
+            let rowStyle = data.terminus ? 'style="background-color: red;"' : ''; // Ligne rouge si terminus
+            tableContent += `<tr ${rowStyle}><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td><td>${nextTimeFormatted}</td><td><button onclick="showLineStops('${ligne}')">Voir les arrêts</button></td></tr>`;
+        }
+    }
+
+    horairesDiv.innerHTML = tableContent || "<tr><td colspan='6'>Plus de bus pour aujourd'hui</td></tr>";
+}
+
 
     // Fonction pour afficher les arrêts d'une ligne
     function showLineStops(ligne) {
