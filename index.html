@@ -185,14 +185,19 @@
 
         if (isHoliday) {
             return "holiday";  // Jour férié
+            console.log("Le système a déduit que nous étions : en vacances");
         } else if (isHolidayPeriod) {
             return "vacation";  // Vacances scolaires / été
+              console.log("Le système a déduit que nous étions : en vacances d'été");
         } else if (dayOfWeek === 6) {
             return "saturday";  // Samedi
+              console.log("Le système a déduit que nous étions : samedi");
         } else if (dayOfWeek === 0) {
             return "sunday";  // Dimanche
+              console.log("Le système a déduit que nous étions : dimanche");
         } else {
             return "weekday";  // Semaine
+              console.log("Le système a déduit que nous étions : en période de circulation normale");
         }
     }
 
