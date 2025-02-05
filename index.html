@@ -275,7 +275,7 @@
         let stopsContent = `<h3>Arrêts de la ligne ${ligne}</h3><ul>`;
         stops.forEach(stop => {
             const stopTime = formatTime(stop.duration);
-            stopsContent += `<li>${stop.stop} - ${stopTime}</li>`;
+            stopsContent += `<li>${stop.stop}</li>`;
         });
         if (busData[ligne].terminus) {
             stopsContent += `<p style="color: red;">Terminus de la ligne</p>`;
