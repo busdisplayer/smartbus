@@ -113,7 +113,7 @@
         </tbody>
     </table>
     <div id="stops"></div>
-  <script>
+<script>
     function updateLedScreen() {
         const now = new Date();
         const dateStr = now.toLocaleDateString('fr-FR');
@@ -163,11 +163,11 @@
         const isWeekend = now.getDay() === 0 || now.getDay() === 6;
 
         const horairesBus = {
-            "L30": { destination: "Gare Centrale", quai: "Lycée", horaires: isWeekend ? ["09:30", "11:00", "13:30", "15:45", "18:00"] : ["08:00", "09:15", "10:30", "12:00", "14:45", "16:20", "18:00", "19:30", "21:00"] },
-            "L31": { destination: "Université", quai: "Gendarmerie", horaires: isWeekend ? ["10:00", "12:30", "14:00", "16:30", "18:00"] : ["07:45", "09:00", "11:15", "12:30", "14:30", "16:05", "18:00"] },
-            "L32": { destination: "Hôpital", quai: "Gendarmerie", horaires: isWeekend ? ["08:45", "10:15", "12:45", "14:30", "17:30"] : ["06:30", "07:45", "09:00", "10:30", "12:00", "13:45", "15:10", "16:30"] },
-            "L11": { destination: "Stade", quai: "Lycée", horaires: isWeekend ? ["09:15", "11:45", "13:45", "15:45", "17:30"] : ["07:00", "08:30", "10:15", "12:00", "13:30", "15:00", "16:30", "18:00"] },
-            "L35": { destination: "Aéroport", quai: "Lycée", horaires: isWeekend ? ["08:30", "10:30", "13:00", "14:30", "17:15"] : ["07:15", "08:15", "09:45", "11:15", "13:00", "14:45", "16:30", "18:45"] }
+            "L30": { destination: "Gare Centrale", quai: "Lycée", terminus: true, horaires: isWeekend ? ["09:30", "11:00", "13:30", "15:45", "18:00"] : ["08:00", "09:15", "10:30", "12:00", "14:45", "16:20", "18:00", "19:30", "21:00"] },
+            "L31": { destination: "Université", quai: "Gendarmerie", terminus: false, horaires: isWeekend ? ["10:00", "12:30", "14:00", "16:30", "18:00"] : ["07:45", "09:00", "11:15", "12:30", "14:30", "16:05", "18:00"] },
+            "L32": { destination: "Hôpital", quai: "Gendarmerie", terminus: false, horaires: isWeekend ? ["08:45", "10:15", "12:45", "14:30", "17:30"] : ["06:30", "07:45", "09:00", "10:30", "12:00", "13:45", "15:10", "16:30"] },
+            "L11": { destination: "Stade", quai: "Lycée", terminus: true, horaires: isWeekend ? ["09:15", "11:45", "13:45", "15:45", "17:30"] : ["07:00", "08:30", "10:15", "12:00", "13:30", "15:00", "16:30", "18:00"] },
+            "L35": { destination: "Aéroport", quai: "Lycée", terminus: true, horaires: isWeekend ? ["08:30", "10:30", "13:00", "14:30", "17:15"] : ["07:15", "08:15", "09:45", "11:15", "13:00", "14:45", "16:30", "18:45"] }
         };
 
         let tableContent = "";
@@ -181,7 +181,8 @@
                 const nextTimeFormatted = formatTime(nextPassage); // Convertir les minutes en format HH:mm
                 // Récupérer les arrêts et la durée de la ligne
                 const stops = getLineStops(ligne);
-                tableContent += `<tr><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td><td>${nextTimeFormatted}</td><td><button onclick="showLineStops('${ligne}')">Voir les arrêts</button></td></tr>`;
+                let rowStyle = data.terminus ? 'style="background-color: red;"' : ''; // Ligne rouge si terminus
+                tableContent += `<tr ${rowStyle}><td>${ligne}</td><td>${data.destination}</td><td>${timeRemaining} min</td><td>${data.quai}</td><td>${nextTimeFormatted}</td><td><button onclick="showLineStops('${ligne}')">Voir les arrêts</button></td></tr>`;
             }
         }
 
@@ -191,11 +192,21 @@
     // Fonction pour afficher les arrêts d'une ligne
     function showLineStops(ligne) {
         const stops = getLineStops(ligne);
+        const busData = {
+            "L30": { terminus: true },
+            "L31": { terminus: false },
+            "L32": { terminus: false },
+            "L11": { terminus: true },
+            "L35": { terminus: true }
+        };
         let stopsContent = `<h3>Arrêts de la ligne ${ligne}</h3><ul>`;
         stops.forEach(stop => {
             const stopTime = formatTime(stop.duration);
             stopsContent += `<li>${stop.stop} - ${stopTime}</li>`;
         });
+        if (busData[ligne].terminus) {
+            stopsContent += `<p style="color: red;">Terminus de la ligne</p>`;
+        }
         stopsContent += "</ul>";
 
         const stopsDiv = document.getElementById("stops");
@@ -207,7 +218,5 @@
     setInterval(updateLedScreen, 1000);
     setInterval(getNextPassages, 60000);
 </script>
-
-
 </body>
 </html>
